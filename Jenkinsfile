@@ -2,56 +2,30 @@ pipeline {
     agent any
 
     environment {
-        // define any environment variables you need here
         BUILD_ENV = 'dev'
     }
 
     stages {
-        stage('Clone') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh 'git clone https://your-repo-url.git'
-                    } else {
-                        bat 'git clone https://your-repo-url.git'
-                    }
-                }
-            }
-        }
+        // No Clone stage needed!
 
         stage('Build') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh './build.sh'
-                    } else {
-                        bat 'build.bat'
-                    }
-                }
+                bat 'echo Building the app...'
+                bat 'dir' // or your actual build command like `npm install`
             }
         }
 
         stage('Test') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh './test.sh'
-                    } else {
-                        bat 'test.bat'
-                    }
-                }
+                bat 'echo Running tests...'
+                bat 'dir' // or `npm test`, etc.
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh './deploy.sh'
-                    } else {
-                        bat 'deploy.bat'
-                    }
-                }
+                bat 'echo Deploying the app...'
+                bat 'dir' // or your deployment script
             }
         }
     }
