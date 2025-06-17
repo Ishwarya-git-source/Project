@@ -23,16 +23,18 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-p') {
-                        docker.image("${DOCKERHUB_USER}/${IMAGE_NAME}:latest").push()
-                    }
+    steps {
+        script {
+            withDockerRegistry(credentialsId: 'dockerhub-credentials', url: '') {
+                timeout(time: 5, unit: 'MINUTES') {
+                    bat "docker tag ishwarya2001/flask-app:latest index.docker.io/ishwarya2001/flask-app:latest"
+                    bat "docker push index.docker.io/ishwarya2001/flask-app:latest"
                 }
             }
         }
-
-        stage('Deploy to Kubernetes') {
+    }
+}
+       stage('Deploy to Kubernetes') {
             steps {
                 sh '''
                     kubectl apply -f k8s/deployment.yaml
