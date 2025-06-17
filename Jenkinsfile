@@ -2,9 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-p')  // DockerHub creds
-        IMAGE_NAME = 'flask-app'
         DOCKERHUB_USER = 'ishwarya2001'
+        IMAGE_NAME = 'flask-app'
     }
 
     stages {
@@ -23,18 +22,20 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-    steps {
-        script {
-            withDockerRegistry(credentialsId: 'dockerhub-credentials', url: '') {
-                timeout(time: 5, unit: 'MINUTES') {
-                    bat "docker tag ishwarya2001/flask-app:latest index.docker.io/ishwarya2001/flask-app:latest"
-                    bat "docker push index.docker.io/ishwarya2001/flask-app:latest"
+            steps {
+                script {
+                    // Make sure you have a Jenkins credential with ID 'dockerhub-credentials'
+                    withDockerRegistry(credentialsId: 'dockerhub-credentials', url: '') {
+                        timeout(time: 5, unit: 'MINUTES') {
+                            bat "docker tag ${DOCKERHUB_USER}/${IMAGE_NAME}:latest index.docker.io/${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                            bat "docker push index.docker.io/${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
+                        }
+                    }
                 }
             }
         }
-    }
-}
-       stage('Deploy to Kubernetes') {
+
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
                     kubectl apply -f k8s/deployment.yaml
