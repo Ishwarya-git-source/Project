@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')  // Jenkins credentials ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-p')  // Jenkins credentials ID
         IMAGE_NAME = 'flask-app'
         DOCKERHUB_USER = 'ishwarya2001'
     }
