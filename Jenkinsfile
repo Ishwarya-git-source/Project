@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-p')  // Jenkins credentials ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-p')  // DockerHub creds
         IMAGE_NAME = 'flask-app'
         DOCKERHUB_USER = 'ishwarya2001'
     }
@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/your-repo-url.git', branch: 'main'
+                git credentialsId: 'github-p', url: 'https://github.com/Ishwarya-git-source/Project.git', branch: 'main'
             }
         }
 
