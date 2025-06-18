@@ -21,11 +21,10 @@ pipeline {
                 bat 'dir' // or `npm test`, etc.
             }
         }
-
-        stage('Deploy') {
+        
+        stage('Deploy to Kubernetes') {
             steps {
-                bat 'echo Deploying the app...'
-                bat 'dir' // or your deployment script
+                bat "Deploying to Kubernetes..."
             }
         }
     }
