@@ -1,44 +1,43 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')  // Jenkins credentials ID
-        IMAGE_NAME = 'flask-app'
-        DOCKERHUB_USER = 'your-dockerhub-username'
+    stages {
+        stage('Clean') {
+            steps {
+                sh 'docker-compose down --remove-orphans || true'
+                sh 'docker system prune -f || true'
+            }
+        }
+
+        stage('Build Images') {
+            steps {
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Run Services') {
+            steps {
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Test User Service') {
+            steps {
+                sh 'curl --fail http://localhost:5001/users'
+            }
+        }
+
+        stage('Test Product Service') {
+            steps {
+                sh 'curl --fail http://localhost:5002/products || true'
+            }
+        }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git url: 'https://github.com/your-repo-url.git', branch: 'main'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    docker.build("${DOCKERHUB_USER}/${IMAGE_NAME}:latest")
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                        docker.image("${DOCKERHUB_USER}/${IMAGE_NAME}:latest").push()
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh '''
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                '''
-            }
+    post {
+        always {
+            echo 'Cleaning up containers...'
+            sh 'docker-compose down'
         }
     }
 }
