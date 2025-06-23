@@ -1,11 +1,15 @@
 pipeline {
     agent any
 
+    environment {
+        COMPOSE_PROJECT_NAME = 'microservices_project'
+    }
+
     stages {
         stage('Clean') {
             steps {
-                bat 'docker-compose down --remove-orphans || true'
-                bat 'docker system prune -f || true'
+                bat 'docker-compose down --remove-orphans || exit 0'
+                bat 'docker system prune -f || exit 0'
             }
         }
 
@@ -23,13 +27,13 @@ pipeline {
 
         stage('Test User Service') {
             steps {
-                bat 'curl --fail http://localhost:5001/users'
+                bat 'curl --fail http://localhost:5001/users || exit 1'
             }
         }
 
         stage('Test Product Service') {
             steps {
-                bat 'curl --fail http://localhost:5002/products || true'
+                bat 'curl --fail http://localhost:5002/products || exit 1'
             }
         }
     }
@@ -37,7 +41,7 @@ pipeline {
     post {
         always {
             echo 'Cleaning up containers...'
-            bat 'docker-compose down'
+            bat 'docker-compose down || exit 0'
         }
     }
 }
