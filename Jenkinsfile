@@ -33,6 +33,7 @@ pipeline {
 
         stage('Test Product Service') {
             steps {
+                bat 'timeout /T 5 /NOBREAK' // wait for 5 seconds (Windows shell)
                 bat 'curl --fail http://localhost:5002/products || exit 1'
             }
         }
