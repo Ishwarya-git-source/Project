@@ -33,8 +33,21 @@ pipeline {
 
         stage('Test Product Service') {
             steps {
-                bat 'ping -n 6 127.0.0.1 > nul' // wait for 5 seconds (Windows-safe)
-                bat 'curl --fail http://localhost:5002/products || exit 1'
+                bat '''
+                set RETRIES=5
+                set WAIT=3
+                set COUNT=0
+                :retry
+                curl --fail http://localhost:5002/products && goto success
+                set /a COUNT+=1
+                if %COUNT% GEQ %RETRIES% goto fail
+                timeout /t %WAIT% > nul
+                goto retry
+                :fail
+                exit 1
+                :success
+                echo Product service is up!
+                '''
             }
         }
     }
