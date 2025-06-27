@@ -15,23 +15,19 @@ pipeline {
         stage('Detect Changes') {
             steps {
                 script {
-                    def commits = bat(script: 'git log --oneline -2', returnStdout: true).trim().split("\n")
-                    if (commits.size() < 2) {
-                        echo "🟡 First build or shallow history — running all services."
-                        env.CHANGED_SERVICE = 'all'
-                    } else {
-                        def changes = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
-                        echo "🔍 Changed files:\n${changes}"
+                    def changes = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
+                    echo "🔍 Changed files:\n${changes}"
 
-                        if (changes.contains('user-service')) {
-                            env.CHANGED_SERVICE = 'user-service'
-                        } else if (changes.contains('product-service')) {
-                            env.CHANGED_SERVICE = 'product-service'
-                        } else {
-                            echo "ℹ️ No specific service changed — running all services."
-                            env.CHANGED_SERVICE = 'all'
-                        }
+                    if (changes.contains('user-service')) {
+                        env.CHANGED_SERVICE = 'user-service'
+                    } else if (changes.contains('product-service')) {
+                        env.CHANGED_SERVICE = 'product-service'
+                    } else {
+                        echo "ℹ️ No specific service changed — running all services."
+                        env.CHANGED_SERVICE = 'all'   // ✅ Properly assign to env
                     }
+
+                    echo "✅ CHANGED_SERVICE: ${env.CHANGED_SERVICE}"
                 }
             }
         }
