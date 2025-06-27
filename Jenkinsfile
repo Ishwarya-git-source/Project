@@ -2,60 +2,54 @@ pipeline {
     agent any
 
     environment {
-        COMPOSE_PROJECT_NAME = 'microservices_project'
+        CHANGED_SERVICE = ''
     }
 
     stages {
+        stage('Detect Changes') {
+            steps {
+                script {
+                    def changes = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
+                    if (changes.contains('user-service')) {
+                        env.CHANGED_SERVICE = 'user-service'
+                    } else if (changes.contains('product-service')) {
+                        env.CHANGED_SERVICE = 'product-service'
+                    } else {
+                        error "No known service changed. Skipping build."
+                    }
+                }
+            }
+        }
+
         stage('Clean') {
             steps {
-                bat 'docker-compose down --remove-orphans || exit 0'
-                bat 'docker system prune -f || exit 0'
+                bat "docker-compose stop %CHANGED_SERVICE% || exit 0"
+                bat "docker-compose rm -f %CHANGED_SERVICE% || exit 0"
             }
         }
 
-        stage('Build Images') {
+        stage('Build') {
             steps {
-                bat 'docker-compose build'
+                bat "docker-compose build %CHANGED_SERVICE%"
             }
         }
 
-        stage('Run Services') {
+        stage('Run') {
             steps {
-                bat 'docker-compose up -d'
+                bat "docker-compose up -d %CHANGED_SERVICE%"
             }
         }
 
-        stage('Test User Service') {
+        stage('Test') {
             steps {
-                bat 'curl --fail http://localhost:5001/users || exit 1'
+                script {
+                    if (env.CHANGED_SERVICE == 'user-service') {
+                        bat 'curl --fail http://localhost:5001/users || exit 1'
+                    } else if (env.CHANGED_SERVICE == 'product-service') {
+                        bat 'curl --fail http://localhost:5002/products || exit 1'
+                    }
+                }
             }
-        }
-
-        stage('Test Product Service') {
-            steps {
-                bat '''
-                set RETRIES=5
-                set WAIT=3
-                set COUNT=0
-                :retry
-                curl --fail http://localhost:5003/products && goto success
-                set /a COUNT+=1
-                if %COUNT% GEQ %RETRIES% goto fail
-                timeout /t %WAIT% > nul
-                goto retry
-                :fail
-                exit 1
-                :success
-                echo Product service is up!
-                '''
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Cleaning up containers...'
-            bat 'docker-compose down || exit 0'
         }
     }
 }
