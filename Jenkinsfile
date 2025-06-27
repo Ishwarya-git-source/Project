@@ -41,6 +41,7 @@ pipeline {
 
                     // RUN
                     if (changedService == 'all') {
+                        bat "docker-compose down || exit 0"
                         bat "docker-compose up -d"
                     } else {
                         bat "docker-compose up -d ${changedService}"
