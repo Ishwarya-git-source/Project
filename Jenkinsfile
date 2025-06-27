@@ -15,13 +15,11 @@ pipeline {
         stage('Detect Changes') {
             steps {
                 script {
-                    // Check if there are at least 2 commits
                     def commits = bat(script: 'git log --oneline -2', returnStdout: true).trim().split("\n")
                     if (commits.size() < 2) {
-                        echo "🟡 First build detected or only one commit. Building all services."
+                        echo "🟡 First build or shallow history — running all services."
                         env.CHANGED_SERVICE = 'all'
                     } else {
-                        // Check which files were changed
                         def changes = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
                         echo "🔍 Changed files:\n${changes}"
 
@@ -30,7 +28,8 @@ pipeline {
                         } else if (changes.contains('product-service')) {
                             env.CHANGED_SERVICE = 'product-service'
                         } else {
-                            error "❌ No known service changed. Skipping build."
+                            echo "ℹ️ No specific service changed — running all services."
+                            env.CHANGED_SERVICE = 'all'
                         }
                     }
                 }
@@ -38,11 +37,6 @@ pipeline {
         }
 
         stage('Clean') {
-            when {
-                expression {
-                    return env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'product-service' || env.CHANGED_SERVICE == 'all'
-                }
-            }
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'all') {
@@ -57,11 +51,6 @@ pipeline {
         }
 
         stage('Build') {
-            when {
-                expression {
-                    return env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'product-service' || env.CHANGED_SERVICE == 'all'
-                }
-            }
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'all') {
@@ -74,11 +63,6 @@ pipeline {
         }
 
         stage('Run') {
-            when {
-                expression {
-                    return env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'product-service' || env.CHANGED_SERVICE == 'all'
-                }
-            }
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'all') {
@@ -91,11 +75,6 @@ pipeline {
         }
 
         stage('Test') {
-            when {
-                expression {
-                    return env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'product-service' || env.CHANGED_SERVICE == 'all'
-                }
-            }
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'all') {
