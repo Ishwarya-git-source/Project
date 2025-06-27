@@ -28,8 +28,8 @@ pipeline {
                         changedService = 'all'
                     }
 
-                    // ✅ Properly assign for later stages
-                    env.CHANGED_SERVICE = changedService
+                    // Set it safely
+                    env.CHANGED_SERVICE = changedService.toString()
                     echo "✅ CHANGED_SERVICE set to: ${env.CHANGED_SERVICE}"
                 }
             }
@@ -39,8 +39,7 @@ pipeline {
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'all') {
-                        bat 'docker-compose stop || exit 0'
-                        bat 'docker-compose rm -f || exit 0'
+                        bat "docker-compose down --remove-orphans || exit 0"
                     } else {
                         bat "docker-compose stop ${env.CHANGED_SERVICE} || exit 0"
                         bat "docker-compose rm -f ${env.CHANGED_SERVICE} || exit 0"
@@ -53,7 +52,7 @@ pipeline {
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'all') {
-                        bat 'docker-compose build'
+                        bat "docker-compose build"
                     } else {
                         bat "docker-compose build ${env.CHANGED_SERVICE}"
                     }
@@ -65,7 +64,7 @@ pipeline {
             steps {
                 script {
                     if (env.CHANGED_SERVICE == 'all') {
-                        bat 'docker-compose up -d'
+                        bat "docker-compose up -d"
                     } else {
                         bat "docker-compose up -d ${env.CHANGED_SERVICE}"
                     }
@@ -79,6 +78,7 @@ pipeline {
                     if (env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'all') {
                         bat 'curl --fail http://localhost:5001/users || exit 1'
                     }
+
                     if (env.CHANGED_SERVICE == 'product-service' || env.CHANGED_SERVICE == 'all') {
                         bat 'curl --fail http://localhost:5003/products || exit 1'
                     }
