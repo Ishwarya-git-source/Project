@@ -18,16 +18,19 @@ pipeline {
                     def changes = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
                     echo "🔍 Changed files:\n${changes}"
 
+                    def changedService = ''
                     if (changes.contains('user-service')) {
-                        env.CHANGED_SERVICE = 'user-service'
+                        changedService = 'user-service'
                     } else if (changes.contains('product-service')) {
-                        env.CHANGED_SERVICE = 'product-service'
+                        changedService = 'product-service'
                     } else {
                         echo "ℹ️ No specific service changed — running all services."
-                        env.CHANGED_SERVICE = 'all'   // ✅ Properly assign to env
+                        changedService = 'all'
                     }
 
-                    echo "✅ CHANGED_SERVICE: ${env.CHANGED_SERVICE}"
+                    // ✅ Properly assign for later stages
+                    env.CHANGED_SERVICE = changedService
+                    echo "✅ CHANGED_SERVICE set to: ${env.CHANGED_SERVICE}"
                 }
             }
         }
