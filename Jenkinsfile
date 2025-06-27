@@ -46,7 +46,7 @@ pipeline {
                     if (env.CHANGED_SERVICE == 'user-service') {
                         bat 'curl --fail http://localhost:5001/users || exit 1'
                     } else if (env.CHANGED_SERVICE == 'product-service') {
-                        bat 'curl --fail http://localhost:5002/products || exit 1'
+                        bat 'curl --fail http://localhost:5003/products || exit 1'
                     }
                 }
             }
