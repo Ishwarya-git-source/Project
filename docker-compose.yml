@@ -10,4 +10,4 @@ services:
     build:
       context: ./product-service
     ports:
-      - "5003:5003"
+      - "5003:5002"
