@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        CHANGED_SERVICE = ''
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -12,74 +8,50 @@ pipeline {
             }
         }
 
-        stage('Detect Changes') {
+        stage('Detect, Build and Run Changed Service') {
             steps {
                 script {
-                    def changes = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
-                    echo "🔍 Changed files:\n${changes}"
+                    def changedFiles = bat(script: 'git diff --name-only HEAD~1 HEAD', returnStdout: true).trim()
+                    echo "🔍 Changed files:\n${changedFiles}"
 
                     def changedService = ''
-                    if (changes.contains('user-service')) {
+                    if (changedFiles.contains('user-service')) {
                         changedService = 'user-service'
-                    } else if (changes.contains('product-service')) {
+                    } else if (changedFiles.contains('product-service')) {
                         changedService = 'product-service'
                     } else {
                         echo "ℹ️ No specific service changed — running all services."
                         changedService = 'all'
                     }
 
-                    // Set it safely
-                    env.CHANGED_SERVICE = changedService.toString()
-                    echo "✅ CHANGED_SERVICE set to: ${env.CHANGED_SERVICE}"
-                }
-            }
-        }
-
-        stage('Clean') {
-            steps {
-                script {
-                    if (env.CHANGED_SERVICE == 'all') {
+                    // CLEAN
+                    if (changedService == 'all') {
                         bat "docker-compose down --remove-orphans || exit 0"
                     } else {
-                        bat "docker-compose stop ${env.CHANGED_SERVICE} || exit 0"
-                        bat "docker-compose rm -f ${env.CHANGED_SERVICE} || exit 0"
+                        bat "docker-compose stop ${changedService} || exit 0"
+                        bat "docker-compose rm -f ${changedService} || exit 0"
                     }
-                }
-            }
-        }
 
-        stage('Build') {
-            steps {
-                script {
-                    if (env.CHANGED_SERVICE == 'all') {
+                    // BUILD
+                    if (changedService == 'all') {
                         bat "docker-compose build"
                     } else {
-                        bat "docker-compose build ${env.CHANGED_SERVICE}"
+                        bat "docker-compose build ${changedService}"
                     }
-                }
-            }
-        }
 
-        stage('Run') {
-            steps {
-                script {
-                    if (env.CHANGED_SERVICE == 'all') {
+                    // RUN
+                    if (changedService == 'all') {
                         bat "docker-compose up -d"
                     } else {
-                        bat "docker-compose up -d ${env.CHANGED_SERVICE}"
+                        bat "docker-compose up -d ${changedService}"
                     }
-                }
-            }
-        }
 
-        stage('Test') {
-            steps {
-                script {
-                    if (env.CHANGED_SERVICE == 'user-service' || env.CHANGED_SERVICE == 'all') {
+                    // TEST
+                    if (changedService == 'user-service' || changedService == 'all') {
                         bat 'curl --fail http://localhost:5001/users || exit 1'
                     }
 
-                    if (env.CHANGED_SERVICE == 'product-service' || env.CHANGED_SERVICE == 'all') {
+                    if (changedService == 'product-service' || changedService == 'all') {
                         bat 'curl --fail http://localhost:5003/products || exit 1'
                     }
                 }
