@@ -38,7 +38,7 @@ pipeline {
                 set WAIT=3
                 set COUNT=0
                 :retry
-                curl --fail http://localhost:5002/products && goto success
+                curl --fail http://localhost:5003/products && goto success
                 set /a COUNT+=1
                 if %COUNT% GEQ %RETRIES% goto fail
                 timeout /t %WAIT% > nul
