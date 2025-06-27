@@ -49,7 +49,7 @@ pipeline {
 
                     // TEST
                     if (changedService == 'user-service' || changedService == 'all') {
-                        bat 'curl --fail http://localhost:5001/users || exit 1'
+                        bat 'curl --fail http://localhost:5011/users || exit 1'
                     }
 
                     if (changedService == 'product-service' || changedService == 'all') {
