@@ -47,13 +47,21 @@ pipeline {
                         bat "docker-compose up -d ${changedService}"
                     }
 
+                    // WAIT before testing
+                    echo "⏳ Waiting for service to be ready..."
+                    sleep time: 10, unit: 'SECONDS'
+
                     // TEST
                     if (changedService == 'user-service' || changedService == 'all') {
-                        bat 'curl --fail http://localhost:5011/users || exit 1'
+                        retry(3) {
+                            bat 'curl --fail http://localhost:5011/users || exit 1'
+                        }
                     }
 
                     if (changedService == 'product-service' || changedService == 'all') {
-                        bat 'curl --fail http://localhost:5003/products || exit 1'
+                        retry(3) {
+                            bat 'curl --fail http://localhost:5003/products || exit 1'
+                        }
                     }
                 }
             }
