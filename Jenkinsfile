@@ -49,7 +49,7 @@ pipeline {
 
                     // WAIT before testing
                     echo "⏳ Waiting for service to be ready..."
-                    sleep time: 10, unit: 'SECONDS'
+                    sleep time: 20, unit: 'SECONDS'
 
                     // TEST
                     if (changedService == 'user-service' || changedService == 'all') {
@@ -60,7 +60,7 @@ pipeline {
 
                     if (changedService == 'product-service' || changedService == 'all') {
                         retry(3) {
-                            bat 'curl --fail http://localhost:5003/products || exit 1'
+                            bat 'curl --fail http://localhost:5004/products || exit 1'
                         }
                     }
                 }
